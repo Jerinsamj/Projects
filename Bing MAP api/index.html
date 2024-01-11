@@ -1,0 +1,307 @@
+<!-- Statement of Authorship: StAuth10244: I JERIN SAM JAMES, 000779996 certify that this material is my original work. No other person's work has been used without due acknowledgement. I have not made my work available to anyone else. -->
+<!--
+  Author: Jerin Sam James (000779996)
+  Date: 22 OCT 2023
+  description: This html file contain the javascript and bootstrap for implementing geolocation,geocode,filter using Bing map API
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta charset="utf-8" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+      var map, watchId, userPin, myLocation;
+      var Pushpinsarenas = [];
+      var Pushpinsrecreation = [];
+      var waypoint1, directionsManager, waypoint2;
+
+      function GetMap() {
+        map = new Microsoft.Maps.Map("#myMap", {
+          credentials:
+            "Au17wlYC0yWsrXrkJJqukGC7YExcuOvPKNfPRcGdeoB5Ca0Obh7J65qD7zK6fJPR",
+        });
+        map.setView({
+          
+          center: new Microsoft.Maps.Location(43.2387, -79.8881),
+          zoom: 10,
+        });
+
+        infobox = new Microsoft.Maps.Infobox(map.getCenter(), {
+          visible: false,
+        });
+
+        infobox.setMap(map);
+
+        loadPushpinsArenas();
+        loadPushpinsRecreation();
+        Microsoft.Maps.loadModule("Microsoft.Maps.Search", function () {
+          searchManager = new Microsoft.Maps.Search.SearchManager(map);
+        });
+      }
+
+      function codeAddress() {
+        var address = document.getElementById("locationInput").value;
+
+        var searchRequest = {
+          where: address,
+          callback: Success,
+        };
+
+        searchManager.geocode(searchRequest);
+      }
+
+      function Success(answer, userData) {
+        if (answer.results.length > 0) {
+          var location = answer.results[0].location;
+          var pushpin = new Microsoft.Maps.Pushpin(location, {
+            title: "Geocoded Location",
+            icon: "img/car22.png",
+            anchor: new Microsoft.Maps.Point(80, 50),
+          });
+          map.entities.push(pushpin);
+          map.setView({ bounds: answer.results[0].bestView });
+        } else {
+          alert("Location not found");
+        }
+      }
+
+      function getLocation() {
+        userPin = new Microsoft.Maps.Pushpin(map.getCenter(), {
+          visible: false,
+        });
+        map.entities.push(userPin);
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function (position) {
+            myLocation = new Microsoft.Maps.Location(
+              position.coords.latitude,
+              position.coords.longitude
+            );
+            userPin.setLocation(myLocation);
+            userPin.setOptions({
+              visible: true,
+              icon: "img/car22.png",
+              anchor: new Microsoft.Maps.Point(80, 50),
+            });
+          });
+        }
+        waypoint1 = new Microsoft.Maps.Directions.Waypoint({
+          location: myLocation,
+        });
+      }
+
+      function loadPushpinsArenas() {
+        pushpinlocationarenas.forEach(function (pushpinlocationarenas) {
+          var pushpinarenas = new Microsoft.Maps.Pushpin(
+            new Microsoft.Maps.Location(
+              pushpinlocationarenas.LATITUDE,
+              pushpinlocationarenas.LONGITUDE
+            ),
+            {
+              title: pushpinlocationarenas.NAME,
+
+              category: pushpinlocationarenas.CATEGORY,
+              
+            }
+          );
+
+          Pushpinsarenas.push(pushpinarenas);
+
+          Microsoft.Maps.Events.addHandler(pushpinarenas, "click", function () {
+            infobox.setOptions({
+              location: pushpinarenas.getLocation(),
+              title: pushpinarenas.getTitle(),
+              description:
+              "<div class='mt-2'><button class='btn btn-danger' onclick=" + "'clearwaypoint()'>Clear way point  </button></div>",
+              visible: true,
+            });
+            Microsoft.Maps.loadModule("Microsoft.Maps.Directions", function () {
+              directionsManager =
+                new Microsoft.Maps.Directions.DirectionsManager(map);
+
+              // Set Route Mode to driving
+              directionsManager.setRequestOptions({
+                routeMode: Microsoft.Maps.Directions.RouteMode.driving,
+              });
+
+              getLocation();
+
+              waypoint2 = new Microsoft.Maps.Directions.Waypoint({
+                location: pushpinarenas.getLocation(),
+              });
+
+              directionsManager.addWaypoint(waypoint1);
+              directionsManager.addWaypoint(waypoint2);
+              // Set the element in which the itinerary will be rendered
+              directionsManager.setRenderOptions({
+                itineraryContainer: document.getElementById("printoutPanel"),
+              });
+              Microsoft.Maps.Events.addHandler(
+                directionsManager,
+                "directionsError",
+                function (args) {
+                  document.getElementById("printoutPanel").innerHTML =
+                    args.message;
+                }
+              );
+              directionsManager.calculateDirections();
+            });
+          });
+
+          map.entities.push(Pushpinsarenas);
+        });
+      }
+      function loadPushpinsRecreation() {
+        pushpinlocationrecreation.forEach(function (pushpinlocationrecreation) {
+          var pushpinsrecreation = new Microsoft.Maps.Pushpin(
+            new Microsoft.Maps.Location(
+              pushpinlocationrecreation.LATITUDE,
+              pushpinlocationrecreation.LONGITUDE
+            ),
+            {
+              title: pushpinlocationrecreation.NAME,
+              description: pushpinlocationrecreation.PHONE,
+              category: pushpinlocationrecreation.CATEGORY,
+              color: "red",
+            }
+          );
+
+          Pushpinsrecreation.push(pushpinsrecreation);
+
+          Microsoft.Maps.Events.addHandler(
+            pushpinsrecreation,
+            "click",
+            function () {
+              infobox.setOptions({
+                location: pushpinsrecreation.getLocation(),
+                title: "" + pushpinsrecreation.getTitle(),
+                description:
+                  "<div class='mt-2'><button class='btn btn-danger' onclick=" + "'clearwaypoint()'>Clear way point  </button></div>",
+
+                visible: true,
+              });
+
+              Microsoft.Maps.loadModule(
+                "Microsoft.Maps.Directions",
+                function () {
+                  directionsManager =
+                    new Microsoft.Maps.Directions.DirectionsManager(map);
+
+                  // Set Route Mode to driving
+                  directionsManager.setRequestOptions({
+                    routeMode: Microsoft.Maps.Directions.RouteMode.driving,
+                  });
+
+                  getLocation();
+
+                  waypoint2 = new Microsoft.Maps.Directions.Waypoint({
+                    location: pushpinsrecreation.getLocation(),
+                  });
+
+                  directionsManager.addWaypoint(waypoint1);
+                  directionsManager.addWaypoint(waypoint2);
+                  // Set the element in which the itinerary will be rendered
+                  directionsManager.setRenderOptions({
+                    itineraryContainer:
+                      document.getElementById("printoutPanel"),
+                  });
+                  Microsoft.Maps.Events.addHandler(
+                    directionsManager,
+                    "directionsError",
+                    function (args) {
+                      document.getElementById("printoutPanel").innerHTML =
+                        args.message;
+                    }
+                  );
+                  directionsManager.calculateDirections();
+                }
+              );
+            }
+          );
+
+          map.entities.push(Pushpinsrecreation);
+        });
+      }
+      function clearwaypoint() {
+        directionsManager.clearAll();
+        directionsManager.clearDisplay();
+      }
+
+      function filterPushpins(category) {
+        Pushpinsarenas.forEach(function (pushpin1) {
+          Pushpinsrecreation.forEach(function (pushpin2) {
+            if (category === "Arenas") {
+              pushpin1.setOptions({ visible: true });
+              pushpin2.setOptions({ visible: false });
+            } else if (category === "Recreation community centre") {
+              pushpin1.setOptions({ visible: false });
+              pushpin2.setOptions({ visible: true });
+            } else {
+              pushpin1.setOptions({ visible: true });
+              pushpin2.setOptions({ visible: true });
+            }
+          });
+        });
+      }
+    </script>
+    <script
+      type="text/javascript"
+      src="http://www.bing.com/api/maps/mapcontrol?callback=GetMap"
+      async
+      defer
+    ></script>
+  </head>
+  <body>
+   
+    <script type="text/javascript" src="js/arenas.js"></script>
+    <script type="text/javascript" src="js/recreation.js"></script>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Bing Map</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#">Home</a>
+              
+            </li>
+            <li class="nav-item">
+              
+              <button class="btn btn-outline-success" id="Geolocate" onclick="getLocation()">Turn on geolocation</button>
+         
+            </li>
+          </ul>
+          <li class="d-flex" >
+            <input class="form-control me-2" id="locationInput" placeholder="Enter a location" >
+            <button class="btn btn-outline-success" onclick="codeAddress()">Geocode</button>
+            
+          </li>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="container">
+      <h1 class="mt-4">Bing Maps API</h1>
+      <div class="row">
+          <div class="col-md-9">
+              <div id="myMap" style="width: 100%; height: 400px;"></div>
+          </div>
+          <div class="col-md-6">
+             
+              
+              <div id='printoutPanel'></div>
+          </div>
+      </div>
+
+      <div class="mt-4">
+          <button class="btn btn-primary" onclick="filterPushpins('Recreation community centre')">Show Recreation</button>
+          <button class="btn btn-primary" onclick="filterPushpins('Arenas')">Show Arenas</button>
+          <button class="btn btn-primary" onclick="filterPushpins('all')">Show All</button>
+          
+      </div>
+      
+  </body>
+</html>
