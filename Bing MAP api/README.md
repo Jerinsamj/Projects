@@ -1,3 +1,4 @@
+NOTE: Open through the visual studio to see the best result. Sometimes Browsers won’t support JavaScript 
 Web page that utilizes the Bing Maps API to display a map and interact with various features related to locations, geocoding, and directions. The page includes external JavaScript files (js/arenas.js and js/recreation.js), suggesting that pushpin location data for Arenas and Recreation centers may be loaded from these files.
 
 ![Bing Map](https://github.com/Jerinsamj/Projects/assets/151986308/99619af4-bd5b-4bce-94e5-c29e54547963)
